@@ -22,7 +22,7 @@ const updateCache = (key: string, data: any) => {
   } catch {}
 };
 
-export type UserProfileName = 'Juli' | 'Caro';
+export type UserProfileName = 'Javi' | 'Mary';
 
 interface AppState {
   // Perfil activo
@@ -70,7 +70,7 @@ interface AppState {
 const cached = getCachedData();
 
 const initialState = {
-  activeProfile: (cached?.activeProfile as UserProfileName) ?? 'Juli',
+  activeProfile: (cached?.activeProfile as UserProfileName) ?? 'Javi',
   isProfileConfirmed: true, // Cambiado a true por defecto para evitar overlay
   
   recetas: cached?.recetas ?? [],
