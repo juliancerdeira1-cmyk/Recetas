@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/hooks/use-toast"
 import { useFirestore } from "@/firebase"
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore"
+import { collection, addDoc, serverTimestamp, getDocs } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { USER_ID } from "@/lib/constants"
 import { categorizeIngredient, normalizeIngredientName } from "@/lib/categorizeIngredient"
@@ -171,6 +171,12 @@ export function RecipeImportModal({ open, onOpenChange }: { open: boolean, onOpe
 
       let firstRecipeId = ""
 
+      // Traer todos los ingredientes existentes de una sola vez
+      const existingSnap = await getDocs(ingredientsCol)
+      const existingNames = new Set(
+        existingSnap.docs.map(d => (d.data().nombre || "").toLowerCase().trim())
+      )
+
       for (const recipeData of items) {
         // Normalización de categorías de receta
         let rawCats = recipeData.categorias || recipeData.categoria || ["Almuerzo"];
@@ -178,7 +184,7 @@ export function RecipeImportModal({ open, onOpenChange }: { open: boolean, onOpe
         recipeData.categorias = categorias;
         recipeData.categoria = categorias[0];
 
-        // Asegurar campos nuevos si no existen
+        // Asegurar campos si no existen
         recipeData.utensilios = recipeData.utensilios || [];
         recipeData.tips = recipeData.tips || [];
 
@@ -196,34 +202,35 @@ export function RecipeImportModal({ open, onOpenChange }: { open: boolean, onOpe
         recipeData.createdAt = serverTimestamp()
         recipeData.updatedAt = serverTimestamp()
 
+        // Guardar la receta
         const docRef = await addDoc(recipesCol, recipeData)
         if (!firstRecipeId) firstRecipeId = docRef.id
 
-        // Guardar ingredientes en la despensa si no existen
-        for (const ing of recipeData.ingredientes || []) {
-          if (!ing.nombre) continue;
-          const normalizedName = normalizeIngredientName(ing.nombre);
-          const q = query(ingredientsCol, where("nombre", "==", normalizedName))
-          const snap = await getDocs(q)
-          
-          if (snap.empty) {
-            await addDoc(ingredientsCol, {
-              nombre: normalizedName,
-              categoria: ing.categoria || categorizeIngredient(normalizedName),
-              unidad: ing.unidad || "unidad",
-              stockActual: 0,
-              stockMinimo: 0, 
-              userId: USER_ID,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            })
-          }
-        }
+        // Agregar ingredientes nuevos a la despensa (sin consultar uno por uno)
+        const newIngredients = (recipeData.ingredientes || []).filter((ing: any) => {
+          const name = (ing.nombre || "").toLowerCase().trim()
+          return name && !existingNames.has(name)
+        })
+
+        // Guardar en paralelo todos los ingredientes nuevos de una vez
+        await Promise.all(newIngredients.map((ing: any) => {
+          existingNames.add(ing.nombre.toLowerCase().trim()) // evitar duplicados dentro del mismo import
+          return addDoc(ingredientsCol, {
+            nombre: ing.nombre,
+            categoria: ing.categoria || categorizeIngredient(ing.nombre),
+            unidad: ing.unidad || "unidad",
+            stockActual: 0,
+            stockMinimo: 0,
+            userId: USER_ID,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          })
+        }))
       }
 
       toast({ 
         title: "¡Importación exitosa!", 
-        description: `Se han guardado ${items.length} recetas correctamente.` 
+        description: `Se ${items.length === 1 ? 'guardó 1 receta' : `guardaron ${items.length} recetas`} correctamente.`
       })
       onOpenChange(false)
       if (items.length === 1 && firstRecipeId) {
@@ -233,7 +240,7 @@ export function RecipeImportModal({ open, onOpenChange }: { open: boolean, onOpe
       }
     } catch (e) {
       console.error(e)
-      toast({ variant: "destructive", title: "Error", description: "No se pudieron guardar las recetas." })
+      toast({ variant: "destructive", title: "Error al importar", description: "Revisá tu conexión e intentá de nuevo." })
     } finally {
       setIsImporting(false)
     }
