@@ -122,15 +122,7 @@ export function EditRecipeClient({ recipeId }: { recipeId: string }) {
 
       const docRef = doc(db, "users", USER_ID, "recipes", recipeId);
       
-      await updateDoc(docRef, updatedData)
-        .catch(async (err) => {
-          const permissionError = new FirestorePermissionError({
-            path: docRef.path,
-            operation: 'update',
-            requestResourceData: updatedData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-        });
+      await updateDoc(docRef, updatedData);
 
       toast({ title: "¡Receta actualizada!" })
       router.push(`/recetas/${recipeId}`)
