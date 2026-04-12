@@ -150,7 +150,7 @@ export function ComprasTab() {
             const cantASumar = convertirCantidad(Number(item.cantidad), item.unidad, data.unidad);
             const newStock = current + cantASumar;
             batch.update(ingRef, { stockActual: newStock, updatedAt: serverTimestamp() });
-            addDoc(collection(db, "users", USER_ID, "stock_historial"), {
+            await addDoc(collection(db, "users", USER_ID, "stock_historial"), {
               ingredienteId: item.ingredienteId,
               ingredienteNombre: item.nombre,
               tipo: 'compra',

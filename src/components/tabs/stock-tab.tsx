@@ -100,7 +100,7 @@ export function StockTab() {
     const newVal = Math.max(0, val);
     try {
       await updateDoc(doc(db, "users", USER_ID, "ingredients", id), { stockActual: newVal, updatedAt: serverTimestamp() });
-      addDoc(collection(db, "users", USER_ID, "stock_historial"), {
+      await addDoc(collection(db, "users", USER_ID, "stock_historial"), {
         ingredienteId: id,
         ingredienteNombre: ing.nombre,
         tipo: 'ajuste',
@@ -110,7 +110,10 @@ export function StockTab() {
         unidad: ing.unidad,
         fecha: serverTimestamp(),
       });
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error("Error actualizando stock:", e);
+      toast({ variant: "destructive", title: "Error al actualizar stock" });
+    }
   };
 
   const toggleSelection = (id: string) => {
