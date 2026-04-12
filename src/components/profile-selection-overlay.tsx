@@ -10,15 +10,15 @@ export function ProfileSelectionOverlay() {
 
   const profiles: { id: UserProfileName; label: string; emoji: string; color: string; description: string }[] = [
     { 
-      id: 'javi', 
-      label: 'Javi', 
+      id: 'Juli', 
+      label: 'Juli', 
       emoji: '🧔‍♂️', 
       color: 'bg-primary',
       description: 'Planes de hipertrofia y volumen'
     },
     { 
-      id: 'mary', 
-      label: 'Mary', 
+      id: 'Caro', 
+      label: 'Caro', 
       emoji: '👩🏻‍🦰', 
       color: 'bg-accent',
       description: 'Recetas saludables y equilibrio'
