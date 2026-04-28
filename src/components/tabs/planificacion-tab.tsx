@@ -49,8 +49,27 @@ import { USER_ID } from '@/lib/constants';
 import { cn, getSafeImageSource } from '@/lib/utils';
 import { GradientPlaceholder } from '@/components/gradient-placeholder';
 import { motion, AnimatePresence } from 'framer-motion';
-import { autoPlanWeek } from '@/ai/flows/auto-plan-week-flow';
-import { autoPlanDay } from '@/ai/flows/auto-plan-day-flow';
+// Planificador aleatorio local — sin IA, sin API key
+const MEAL_TYPES = ['Desayuno', 'Almuerzo', 'Merienda', 'Cena'] as const;
+type MealType = typeof MEAL_TYPES[number];
+
+function pickRandomRecipe(recetas: any[], mealType: MealType): any | null {
+  const matching = recetas.filter(r => {
+    const cats: string[] = r.categorias || (r.categoria ? [r.categoria] : []);
+    return cats.includes(mealType);
+  });
+  const pool = matching.length > 0 ? matching : recetas;
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function buildRandomDayPlans(recetas: any[], date: string) {
+  return MEAL_TYPES.map(mealType => {
+    const recipe = pickRandomRecipe(recetas, mealType);
+    if (!recipe) return null;
+    return { date, mealType, recipeId: recipe.id, recipeName: recipe.nombre };
+  }).filter(Boolean);
+}
 import Image from "next/image";
 import { syncShoppingList } from '@/lib/sync-logic';
 
@@ -138,19 +157,10 @@ export function PlanificacionTab() {
     if (!db || recetas.length === 0) return;
     setIsAutoPlanning(true);
     try {
-      const result = await autoPlanWeek({
-        recipes: recetas.map(r => ({
-          id: r.id,
-          nombre: r.nombre,
-          categorias: r.categorias,
-          categoria: r.categoria,
-          tags: r.tags
-        })),
-        startDate: format(startDate, "yyyy-MM-dd")
-      });
+      const weekStr = weekDays.map(d => format(d, "yyyy-MM-dd"));
+      const result = { plans: weekStr.flatMap(date => buildRandomDayPlans(recetas, date)) };
 
       const batch = writeBatch(db);
-      const weekStr = weekDays.map(d => format(d, "yyyy-MM-dd"));
       
       const currentPlansSnap = await getDocs(query(
         collection(db, "users", USER_ID, "meal_plans"), 
@@ -247,16 +257,7 @@ export function PlanificacionTab() {
     const dateStr = format(date, "yyyy-MM-dd");
     setIsAutoPlanningDay(dateStr);
     try {
-      const result = await autoPlanDay({
-        recipes: recetas.map(r => ({
-          id: r.id,
-          nombre: r.nombre,
-          categorias: r.categorias,
-          categoria: r.categoria,
-          tags: r.tags
-        })),
-        date: dateStr
-      });
+      const result = { plans: buildRandomDayPlans(recetas, dateStr) };
 
       const batch = writeBatch(db);
 
