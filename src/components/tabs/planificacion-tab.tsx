@@ -206,7 +206,7 @@ export function PlanificacionTab() {
           recipeName: p.recipeName,
           recipeCategory: fullRecipe.categoria || "Almuerzo",
           recipeImageUrl: fullRecipe.fotoURL || fullRecipe.imageUrl || null,
-          plannedPortions: 3,
+          plannedPortions: 2,
           recipeOriginalPortions: fullRecipe.porciones || 1,
           macros: macrosCalculados,
           ingredientes: fullRecipe.ingredientes || [],
@@ -299,7 +299,7 @@ export function PlanificacionTab() {
           recipeName: p.recipeName,
           recipeCategory: fullRecipe.categoria || "Almuerzo",
           recipeImageUrl: fullRecipe.fotoURL || fullRecipe.imageUrl || null,
-          plannedPortions: 3,
+          plannedPortions: 2,
           recipeOriginalPortions: fullRecipe.porciones || 1,
           macros: macrosCalculados,
           ingredientes: fullRecipe.ingredientes || [],
@@ -586,9 +586,9 @@ export function PlanificacionTab() {
                               </h4>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <div className="flex items-center gap-1">
-                                  <button onClick={() => handleUpdatePortions(plan.id, plan.plannedPortions || 3, -1)} className="h-4 w-4 bg-muted rounded text-xs font-black flex items-center justify-center">-</button>
-                                  <span className="text-[9px] font-black tabular-nums">{plan.plannedPortions || 3}p</span>
-                                  <button onClick={() => handleUpdatePortions(plan.id, plan.plannedPortions || 3, 1)} className="h-4 w-4 bg-muted rounded text-xs font-black flex items-center justify-center">+</button>
+                                  <button onClick={() => handleUpdatePortions(plan.id, plan.plannedPortions || 2, -1)} className="h-4 w-4 bg-muted rounded text-xs font-black flex items-center justify-center">-</button>
+                                  <span className="text-[9px] font-black tabular-nums">{plan.plannedPortions || 2}p</span>
+                                  <button onClick={() => handleUpdatePortions(plan.id, plan.plannedPortions || 2, 1)} className="h-4 w-4 bg-muted rounded text-xs font-black flex items-center justify-center">+</button>
                                 </div>
                                 <span className="text-[9px] font-black text-primary">{plan.macros?.calorias ?? recipe?.macros?.calorias ?? 0} kcal</span>
                               </div>
